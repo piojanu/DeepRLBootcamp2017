@@ -204,8 +204,15 @@ class DQN(object):
         # Hint: You may want to make use of the following fields: self._discount, self._q, self._qt
         # Hint2: Q-function can be called by self._q.forward(argument)
         # Hint3: You might also find https://docs.chainer.org/en/stable/reference/generated/chainer.functions.select_item.html useful
-        loss = C.Variable(np.array([0.]))  # TODO: replace this line
+
+        # loss = C.Variable(np.array([0.]))  # TODO: replace this line
         "*** YOUR CODE HERE ***"
+        Qt = F.max(self._qt.forward(l_next_obs), -1)  # Quality at time t, of optimal actions
+        y = l_rew + (1 - l_done) * (self._discount * Qt)
+
+        Q = F.select_item(self._q.forward(l_obs), l_act)
+        loss = F.mean((y - Q)**2)
+
         return loss
 
     def compute_double_q_learning_loss(self, l_obs, l_act, l_rew, l_next_obs, l_done):
