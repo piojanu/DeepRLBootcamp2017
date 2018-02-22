@@ -46,8 +46,15 @@ def point_get_grad_logp_action(theta, ob, action):
     :param action: A vector of size |A|
     :return: A matrix of size |A| * (|S|+1)
     """
-    grad = np.zeros_like(theta)
+
+    # grad = np.zeros_like(theta)
     "*** YOUR CODE HERE ***"
+    ob_1 = include_bias(ob)
+    mean = theta.dot(ob_1)
+    zs = action - mean
+
+    grad = np.outer(zs, ob_1)
+
     return grad
 
 
@@ -112,8 +119,16 @@ def cartpole_get_grad_logp_action(theta, ob, action):
     :param action: An integer
     :return: A matrix of size |A| * (|S|+1)
     """
-    grad = np.zeros_like(theta)
-    "*** YOUR CODE HERE ***"
+
+    # grad = np.zeros_like(theta)
+    "*** your CODE HERE ***"
+    ob_1 = include_bias(ob)
+    pi = softmax(compute_logits(theta, ob))
+
+    one_hot = np.zeros_like(pi)
+    one_hot[action] = 1
+
+    grad = np.outer((one_hot - pi), ob_1)
     return grad
 
 
@@ -245,8 +260,8 @@ def main(env_id, batch_size, discount, learning_rate, n_itrs, render, use_baseli
                     matrix of size |A| * (|S|+1) )
                     :return: A tuple, consisting of a scalar and a matrix of size |A| * (|S|+1)
                     """
-                    R_t = 0.
-                    pg_theta = np.zeros_like(theta)
+                    R_t = r_t + discount * R_tplus1
+                    pg_theta = get_grad_logp_action(theta, s_t, a_t) * (R_t - b_t)
                     "*** YOUR CODE HERE ***"
                     return R_t, pg_theta
 
@@ -277,8 +292,8 @@ def main(env_id, batch_size, discount, learning_rate, n_itrs, render, use_baseli
             :return: A vector of size T
             """
             baselines = np.zeros(len(all_returns))
-            for t in range(len(all_returns)):
-                "*** YOUR CODE HERE ***"
+            for t, R in enumerate(all_returns):
+                baselines[t] = np.mean(R + [0.])
             return baselines
 
         if use_baseline:
